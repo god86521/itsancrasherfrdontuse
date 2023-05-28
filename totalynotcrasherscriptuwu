@@ -1,0 +1,167 @@
+local library = loadstring(game:HttpGet("https://pastebin.com/raw/RkeQrn9f"))()
+
+library:setuiname("Be A Parkour Ultra Ninja!")
+
+-- Category's
+
+local maincategory = library:createcategory("Main")
+local combatcategory = library:createcategory("Combat")
+local visualcategory = library:createcategory("Visuals")
+
+-- Vars
+
+local hitboxenabled = false
+
+local speedenabled = false
+local killauraenabled = false
+local closed = false
+local rainbowhitboxenabled = false
+
+local runservice = game:GetService("RunService")
+
+-- Runservice
+
+local hitsize = Vector3.new(14, 14, 14)
+local hitdefaultsize = Vector3.new(2, 2, 1)
+
+runservice.Heartbeat:Connect(function()
+	if not closed then
+		if hitboxenabled then
+			for i,v in pairs(game.Players:GetChildren()) do
+				if v ~= game.Players.LocalPlayer then
+					local a, b = pcall(function()
+						local hrp = v.Character.HumanoidRootPart
+						hrp.Size = hitsize
+						hrp.CanCollide = false
+						hrp.Transparency = 0.5
+					end)
+				end
+			end
+		elseif not hitboxenabled then
+			for i,v in pairs(game.Players:GetChildren()) do
+				if v ~= game.Players.LocalPlayer then
+					local a, b = pcall(function()
+						local hrp = v.Character.HumanoidRootPart
+						hrp.Size = hitdefaultsize
+						hrp.CanCollide = true
+						hrp.Transparency = 1
+					end)
+				end
+			end
+		end
+	end
+end)
+
+-- Main Category
+
+function close()
+	killauraenabled = false
+	hitboxenabled = false
+	speedenabled = false
+	closed = true
+	library:closegui()
+end
+
+function rejoin()
+	game:GetService("TeleportService"):Teleport(game.PlaceId)
+end
+
+function speed(toggle)
+	speedenabled = toggle
+end
+
+local closebutton = library:createbutton("Close", maincategory, close)
+local speedbutton = library:createtogglebutton("Speed", combatcategory, speed)
+local rejoinbutton = library:createbutton("Rejoin", maincategory, rejoin)
+
+-- Combat Category
+
+local killarange = 13
+local killauraspeed = 0.013
+local speed = 2
+
+function killaura(toggle)
+	if toggle then
+		killauraenabled = true
+	else
+		killauraenabled = false
+	end
+end
+
+function hitbox(toggle)
+	hitboxenabled = toggle
+end
+
+local killaurabutton = library:createtogglebutton("Kill Aura", combatcategory, killaura)
+local hitboxbutton = library:createtogglebutton("Hit Box Expander", combatcategory, hitbox)
+
+-- Visuals
+
+function rainbowhitboxtoggle(toggle)
+	rainbowhitboxenabled = toggle
+end
+
+local rainbowenabled = library:createtogglebutton("Rainbow Hitbox", visualcategory, rainbowhitboxtoggle)
+
+function killauraloop()
+	while wait() do
+		if killauraenabled then
+			for i,v in pairs(game.Players:GetChildren()) do
+				local success, err = pcall(function()
+					if v ~= game.Players.LocalPlayer and (v.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < killarange then
+						local args = {
+							[1] = v.Character.Humanoid,
+							[2] = game:GetService("Players").LocalPlayer.Character.Katana
+						}
+						game:GetService("ReplicatedStorage").RemoteTriggers.Bolster:FireServer(unpack(args))
+
+						wait(killauraspeed)
+					end
+				end)
+			end
+		end
+	end
+end
+
+function speedloop()
+	local hum
+	local hrp
+	while wait() do
+		local a, b = pcall(function()
+			hum = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+			hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+			local newcframe = CFrame.new((hrp.CFrame.Position + hum.MoveDirection * speed))
+
+			if speedenabled then
+				hrp.CFrame = newcframe
+			end
+		end)
+	end
+end
+
+function rainbowhitboxloop()
+	local colorspeed = 0.3
+	local colores = 30
+
+	while wait() do
+		if not closed and rainbowhitboxenabled then
+			for i = 1, colores, 1 do
+				for z,x in pairs(game.Players:GetChildren()) do
+					if x ~= game.Players.LocalPlayer then
+						local success, err = pcall(function()
+							local hrp = x.Character.HumanoidRootPart
+							hrp.Color = Color3.fromHSV(i / colores, 1, 1)
+						end)
+					end
+				end
+
+				wait(colorspeed)
+			end
+		end
+	end
+end
+
+spawn(killauraloop)
+spawn(speedloop)
+spawn(rainbowhitboxloop)
